@@ -1,9 +1,12 @@
 import jwt from "jsonwebtoken";
 import { env } from "../../config/env.js";
+const getSameSiteOption = () => {
+    return env.NODE_ENV === "production" ? "none" : "lax";
+};
 const cookieOptions = {
     httpOnly: true,
     secure: env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: getSameSiteOption(),
     path: "/",
     maxAge: 7 * 24 * 60 * 60 * 1000
 };

@@ -20,7 +20,7 @@ export const createApp = () => {
   app.use(
     cors({
       origin(origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
+        
         if (!origin) {
           callback(null, true);
           return;

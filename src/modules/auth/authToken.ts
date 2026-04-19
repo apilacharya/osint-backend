@@ -7,10 +7,16 @@ type AuthTokenPayload = {
   email: string;
 };
 
+type SameSiteOption = "lax" | "strict" | "none";
+
+const getSameSiteOption = (): SameSiteOption => {
+  return env.NODE_ENV === "production" ? "none" : "lax";
+};
+
 const cookieOptions = {
   httpOnly: true,
   secure: env.NODE_ENV === "production",
-  sameSite: "lax" as const,
+  sameSite: getSameSiteOption(),
   path: "/",
   maxAge: 7 * 24 * 60 * 60 * 1000
 };

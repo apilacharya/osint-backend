@@ -6,9 +6,6 @@ const envSchema = z.object({
     PORT: z.coerce.number().int().positive().default(4000),
     DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
     CORS_ORIGINS: z.string().min(1),
-    SEARCH_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(30),
-    GUEST_SEARCH_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(8),
-    REPORT_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(20),
     RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(15 * 60 * 1000),
     GITHUB_TOKEN: z.string().optional(),
     JWT_SECRET: z.string().min(16, "JWT_SECRET must be at least 16 chars"),
@@ -22,5 +19,7 @@ if (!parsed.success) {
 }
 export const env = {
     ...parsed.data,
-    CORS_ORIGINS: parsed.data.CORS_ORIGINS.split(",").map((origin) => origin.trim()).filter(Boolean)
+    CORS_ORIGINS: parsed.data.CORS_ORIGINS.split(",")
+        .map((origin) => origin.trim().replace(/\/$/, ""))
+        .filter(Boolean)
 };

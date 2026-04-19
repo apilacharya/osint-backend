@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum EntityType {
+  PERSON
+  COMPANY
+  UNKNOWN
+}
+
+enum SearchStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum FindingCategory {
+  SOCIAL
+  INFRASTRUCTURE
+  CONTEXTUAL
+}
+
+enum RiskSeverity {
+  low
+  medium
+  high
+  critical
+}
+
+enum ReportFormat {
+  MARKDOWN
+  PDF
+}
+
+model Entity {
+  id             String      @id @default(cuid())
+  name           String
+  normalizedName String      @unique
+  type           EntityType  @default(UNKNOWN)
+  aliases        String[]    @default([])
+  location       String?
+  industry       String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  searchRuns     SearchRun[]
+  findings       Finding[]
+
+  @@map("entities")
+}
+
+model SearchRun {
+  id          String       @id @default(cuid())
+  query       String
+  queryContext Json?
+  status      SearchStatus @default(RUNNING)
+  startedAt   DateTime     @default(now())
+  completedAt DateTime?
+  entityId    String
+  userId      String?
+  entity      Entity       @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  user        User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  findings    Finding[]
+  reports     Report[]
+
+  @@index([userId, startedAt])
+  @@index([entityId, startedAt])
+  @@map("search_runs")
+}
+
+model FindingSource {
+  id         String    @id @default(cuid())
+  provider   String
+  url        String
+  retrievedAt DateTime
+  findings   Finding[]
+
+  @@unique([provider, url])
+  @@map("finding_sources")
+}
+
+model Finding {
+  id                String          @id @default(cuid())
+  category          FindingCategory
+  title             String
+  summary           String
+  confidence        Float
+  confidenceSignals Json
+  rawPayload        Json
+  retrievedAt       DateTime
+  entityId          String
+  searchRunId       String
+  sourceId          String
+  entity            Entity          @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  searchRun         SearchRun       @relation(fields: [searchRunId], references: [id], onDelete: Cascade)
+  source            FindingSource   @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  riskAssessment    RiskAssessment?
+
+  @@index([entityId, category])
+  @@index([searchRunId])
+  @@map("findings")
+}
+
+model RiskAssessment {
+  id        String       @id @default(cuid())
+  findingId String       @unique
+  severity  RiskSeverity
+  score     Int
+  rationale String
+  createdAt DateTime     @default(now())
+  finding   Finding      @relation(fields: [findingId], references: [id], onDelete: Cascade)
+
+  @@map("risk_assessments")
+}
+
+model Report {
+  id          String       @id @default(cuid())
+  searchRunId String
+  format      ReportFormat
+  fileName    String
+  content     String
+  createdAt   DateTime     @default(now())
+  searchRun   SearchRun    @relation(fields: [searchRunId], references: [id], onDelete: Cascade)
+
+  @@index([searchRunId, createdAt])
+  @@map("reports")
+}
+
+model User {
+  id           String      @id @default(cuid())
+  name         String
+  email        String      @unique
+  passwordHash String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  searchRuns   SearchRun[]
+
+  @@map("users")
+}

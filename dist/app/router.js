@@ -1,0 +1,21 @@
+import { listSearches } from "../modules/search/searchController.js";
+import { searchListSchema } from "../validators/searchValidators.js";
+import { validate } from "../middleware/validate.js";
+import { requireAuth } from "../middleware/auth.js";
+import { asyncHandler } from "../middleware/http.js";
+import { Router } from "express";
+import { searchRoutes } from "../modules/search/searchRoutes.js";
+import { findingsRoutes } from "../modules/findings/findingsRoutes.js";
+import { reportsRoutes } from "../modules/reports/reportsRoutes.js";
+import { authRoutes } from "../modules/auth/authRoutes.js";
+import { sendSuccess } from "../middleware/http.js";
+const apiRouter = Router();
+apiRouter.get("/health", (_req, res) => {
+    sendSuccess(res, { status: "ok" }, {}, 200);
+});
+apiRouter.use("/auth", authRoutes);
+apiRouter.use("/search", searchRoutes);
+apiRouter.get("/history", requireAuth, validate(searchListSchema), asyncHandler(listSearches));
+apiRouter.use("/findings", findingsRoutes);
+apiRouter.use("/reports", reportsRoutes);
+export { apiRouter };

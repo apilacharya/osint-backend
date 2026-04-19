@@ -1,0 +1,11 @@
+import { Router } from "express";
+import { createReportHandler, getReportHandler, listReportsHandler } from "./reportsController.js";
+import { asyncHandler } from "../../middleware/http.js";
+import { validate } from "../../middleware/validate.js";
+import { reportCreateSchema, reportIdSchema, reportListSchema } from "../../validators/reportValidators.js";
+import { requireAuth } from "../../middleware/auth.js";
+const router = Router();
+router.post("/", requireAuth, validate(reportCreateSchema), asyncHandler(createReportHandler));
+router.get("/", requireAuth, validate(reportListSchema), asyncHandler(listReportsHandler));
+router.get("/:id", requireAuth, validate(reportIdSchema), asyncHandler(getReportHandler));
+export { router as reportsRoutes };

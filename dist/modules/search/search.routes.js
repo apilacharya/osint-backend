@@ -1,0 +1,14 @@
+import { Router } from "express";
+import { createSearch, getDiscoveryFeed, getSearchById, listSearches, listSearchSources } from "./search.controller.js";
+import { asyncHandler } from "../../middleware/http.js";
+import { validate } from "../../middleware/validate.js";
+import { searchCreateSchema, searchIdSchema, searchListSchema } from "../../validators/search.validators.js";
+import { guestSearchLimiter, searchWriteLimiter } from "../../middleware/rate-limit.js";
+import { requireAuth } from "../../middleware/auth.js";
+const router = Router();
+router.post("/", searchWriteLimiter, guestSearchLimiter, validate(searchCreateSchema), asyncHandler(createSearch));
+router.get("/", requireAuth, validate(searchListSchema), asyncHandler(listSearches));
+router.get("/sources", asyncHandler(listSearchSources));
+router.get("/feed", asyncHandler(getDiscoveryFeed));
+router.get("/:id", requireAuth, validate(searchIdSchema), asyncHandler(getSearchById));
+export { router as searchRoutes };

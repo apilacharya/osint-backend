@@ -19,21 +19,27 @@ const stripHtml = (value: string): string => value.replace(/<[^>]+>/g, "");
 const provider = "wikipedia";
 const category = FindingCategory.CONTEXTUAL;
 
+const axiosInstance = axios.create({
+  timeout: 8000
+});
+
 const searchWikipedia = async (input: AdapterQuery): Promise<AdapterFinding[]> => {
   const url = new URL("https://en.wikipedia.org/w/api.php");
   url.searchParams.set("action", "query");
   url.searchParams.set("list", "search");
   url.searchParams.set("srsearch", input.query);
-  url.searchParams.set("srlimit", "15");
+  url.searchParams.set("srlimit", "10");
+  url.searchParams.set("srwhat", "text");
   url.searchParams.set("format", "json");
-  url.searchParams.set("utf8", "1");
   url.searchParams.set("origin", "*");
 
   try {
-    const response = await axios.get<WikipediaSearchResponse>(url.toString(), {
-      timeout: 10000,
-      headers: { "User-Agent": "OSINT-Prototype/1.0 (+https://example.local)" }
+    const response = await axiosInstance.get<WikipediaSearchResponse>(url.toString(), {
+      headers: { 
+        "User-Agent": "OSINT-Prototype/1.0"
+      }
     });
+
     const payload = response.data;
     return payload.query.search.map((item) => ({
       category,

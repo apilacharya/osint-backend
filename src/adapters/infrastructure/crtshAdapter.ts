@@ -18,6 +18,10 @@ type DnsResolveResponse = {
 const provider = "dns-google";
 const category = FindingCategory.INFRASTRUCTURE;
 
+const axiosInstance = axios.create({
+  timeout: 5000
+});
+
 const normalizeDomainCandidate = (query: string): string => {
   const normalized = query.trim().toLowerCase().replace(/[^a-z0-9.-]/g, "");
   if (normalized.includes(".")) {
@@ -33,12 +37,14 @@ const searchCertificates = async (input: AdapterQuery): Promise<AdapterFinding[]
   url.searchParams.set("type", "A");
 
   try {
-    const response = await axios.get<DnsResolveResponse>(url.toString(), {
-      timeout: 10000,
-      headers: { "User-Agent": "OSINT-Prototype/1.0 (+https://example.local)" }
+    const response = await axiosInstance.get<DnsResolveResponse>(url.toString(), {
+      headers: { 
+        "User-Agent": "OSINT-Prototype/1.0"
+      }
     });
+
     const payload = response.data;
-    const answers = (payload.Answer ?? []).slice(0, 15);
+    const answers = (payload.Answer ?? []).slice(0, 10);
 
     return answers.map((item) => ({
       category,

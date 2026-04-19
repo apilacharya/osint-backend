@@ -16,28 +16,30 @@ type GithubSearchResponse = {
 const provider = "github";
 const category = FindingCategory.SOCIAL;
 
+const axiosInstance = axios.create({
+  timeout: 8000
+});
+
+if (env.GITHUB_TOKEN) {
+  axiosInstance.defaults.headers.common.Authorization = `Bearer ${env.GITHUB_TOKEN}`;
+}
+
 const searchGithubProfiles = async (input: AdapterQuery): Promise<AdapterFinding[]> => {
   const url = new URL("https://api.github.com/search/users");
   url.searchParams.set("q", input.query);
-  url.searchParams.set("per_page", "15");
-
-  const headers: Record<string, string> = {
-    Accept: "application/vnd.github+json"
-  };
-  if (env.GITHUB_TOKEN) {
-    headers.Authorization = `Bearer ${env.GITHUB_TOKEN}`;
-  }
+  url.searchParams.set("per_page", "10");
+  url.searchParams.set("sort", "followers");
+  url.searchParams.set("order", "desc");
 
   try {
-    const response = await axios.get<GithubSearchResponse>(url.toString(), {
-      timeout: 10000,
+    const response = await axiosInstance.get<GithubSearchResponse>(url.toString(), {
       headers: {
-        ...headers,
-        "User-Agent": "OSINT-Prototype/1.0 (+https://example.local)"
+        Accept: "application/vnd.github.v3+json",
+        "User-Agent": "OSINT-Prototype/1.0"
       }
     });
-    const timestamp = new Date();
 
+    const timestamp = new Date();
     return response.data.items.map((item) => ({
       category,
       title: `GitHub profile: ${item.login}`,

@@ -16,23 +16,26 @@ export const collectFindings = async (
   query: string,
   context: SearchContext | undefined
 ): Promise<AdapterFinding[]> => {
-  const settled = await Promise.allSettled(adapters.map((adapter) => adapter.search({ query, context })));
+  const results = await Promise.allSettled(
+    adapters.map((adapter) => adapter.search({ query, context }))
+  );
+
   const findings: AdapterFinding[] = [];
   let failedCount = 0;
 
-  for (const result of settled) {
+  for (const result of results) {
     if (result.status === "fulfilled") {
       findings.push(...result.value);
-      continue;
+    } else {
+      failedCount += 1;
     }
-    failedCount += 1;
   }
 
-  if (findings.length > 0) {
-    return findings;
+  if (findings.length === 0) {
+    throw adapterError("All adapter upstream requests failed", {
+      failedAdapters: failedCount
+    });
   }
 
-  throw adapterError("All adapter upstream requests failed", {
-    failedAdapters: failedCount
-  });
+  return findings;
 };

@@ -47,7 +47,7 @@ Create `.env` in `backend/`:
 ```bash
 DATABASE_URL=postgresql://user:pass@host/db
 NODE_ENV=development
-PORT=3001
+PORT=4000
 FRONTEND_ORIGIN=http://localhost:5173
 ```
 
@@ -60,7 +60,7 @@ pnpm prisma migrate dev
 pnpm dev
 ```
 
-API default URL: `http://localhost:3001`
+API default URL: `http://localhost:4000`
 
 ---
 

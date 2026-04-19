@@ -20,13 +20,26 @@ export const createApp = () => {
   app.use(
     cors({
       origin(origin, callback) {
-        if (!origin || env.CORS_ORIGINS.includes(origin)) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) {
           callback(null, true);
           return;
         }
+
+        const normalizedOrigin = origin.replace(/\/$/, "");
+        const isAllowed = env.CORS_ORIGINS.some(
+          (allowed) => allowed.replace(/\/$/, "") === normalizedOrigin
+        );
+
+        if (isAllowed) {
+          callback(null, true);
+          return;
+        }
+
+        logger.warn({ origin, normalizedOrigin, allowedOrigins: env.CORS_ORIGINS }, "CORS origin denied");
         callback(new Error("CORS origin denied"));
       },
-      methods: ["GET", "POST"],
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
       credentials: true
     })
   );
